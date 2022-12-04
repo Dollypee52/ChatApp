@@ -1,6 +1,7 @@
-from mailbox import Message
+# from mailbox import Message
 
-from django.shortcuts import render, redirect, HttpResponse
+from django.http import JsonResponse, HttpResponse
+from django.shortcuts import render, redirect
 from .models import Room, Notepad
 
 
@@ -24,11 +25,11 @@ def checkview(request):
     username = request.POST['username']
 
     if Room.objects.filter(name=room).exists():  # if the room name that was inputed exists
-        return redirect('/' + room + '/?username=' + username)  # we redirect to the room
+        return redirect('/'+room+'/?username='+username)  # we redirect to the room
     else:
         new_room = Room.objects.create(name=room)
         new_room.save()
-        return redirect('/' + room + '/?username=' + username)  # we redirect to the room
+        return redirect('/'+room+'/?username='+username)  # we redirect to the room
 
 
 def send(request):
@@ -36,8 +37,15 @@ def send(request):
     username = request.POST['username']
     room_id = request.POST['room_id']
 
-    new_message = Message.objects.create(
-        value=Message, user=username, room=room_id
+    new_message = Notepad.objects.create(
+        value=message, user=username, room=room_id
     )
     new_message.save()
+
+
 # return HttpResponse('Message Sent Successfully!')
+
+def getMessages(request, room):
+    room_details = Room.objects.get(name=room)
+    messages = Notepad.objects.filter(room=room_details.id)
+    return JsonResponse({'messages':list(messages.values())})
